@@ -11,7 +11,7 @@ class Movie {
 
 
         const offset = (page - 1) * perPage;
-        const movies = await knex('movies.basics')
+        const movies = await knex('basics')
             .select(
                 'primaryTitle as title',
                 'year',
@@ -46,7 +46,7 @@ class Movie {
             }
         }
 
-        const total = await knex('movies.basics')
+        const total = await knex('basics')
             .count('* as count')
             .andWhere(builder => {
                 if (year) {
@@ -66,14 +66,14 @@ class Movie {
     }
 
     async isMovieExisted(imdbID) {
-        return knex('movies.basics')
+        return knex('basics')
             .select('*')
             .where('tconst', imdbID)
             .first();
     }
 
     async getMovieData(imdbID) {
-        const movie = await knex('movies.basics')
+        const movie = await knex('basics')
             .select('*')
             .where('tconst', imdbID)
             .first();
@@ -82,7 +82,7 @@ class Movie {
             throw new Error('No record exists of a movie with this ID');
         }
 
-        const principals = await knex('movies.principals')
+        const principals = await knex('principals')
             .select(
                 'nconst as id',
                 'category',
@@ -93,7 +93,7 @@ class Movie {
         principals.forEach(role => {
             role.characters = role.characters ? JSON.parse(role.characters) : [];
         });
-        const ratings = await knex('movies.ratings')
+        const ratings = await knex('ratings')
             .select(
                 'source',
                 'value'

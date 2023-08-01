@@ -4,7 +4,7 @@ import knex from '../config/db.js';
 class People {
 
     async getPersonById(id) {
-        const person = await knex('movies.names')
+        const person = await knex('names')
             .select('*')
             .where('nconst', id)
             .first();
@@ -13,15 +13,15 @@ class People {
             return null;
         }
 
-        const roles = await knex('movies.principals')
+        const roles = await knex('principals')
             .select(
                 'primaryTitle as movieName',
-                'movies.basics.tconst as movieId',
+                'basics.tconst as movieId',
                 'category',
                 'characters',
                 'imdbRating'
             )
-            .innerJoin('movies.basics', 'movies.principals.tconst', 'movies.basics.tconst')
+            .innerJoin('basics', 'principals.tconst', 'basics.tconst')
             .where('nconst', id);
 
         roles.forEach(role => {
