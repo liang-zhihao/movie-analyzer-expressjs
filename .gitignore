@@ -1,0 +1,27 @@
+# Ignore node_modules directory
+node_modules/
+
+# Ignore log files
+*.log
+
+# Ignore environment variables file
+.env
+
+# Ignore generated files
+dist/
+
+# Ignore npm debug logs
+npm-debug.log
+
+# Ignore Visual Studio Code settings
+.vscode/
+
+# Ignore JetBrains IDE settings
+.idea/
+
+# Ignore Mac-specific files
+.DS_Store
+
+assignment_data.zip
+assignment_data/*
+references/*

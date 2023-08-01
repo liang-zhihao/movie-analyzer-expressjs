@@ -1,0 +1,884 @@
+openapi: 3.0.0
+info:
+  title: Movie API
+  description: API for movie and people data
+  version: 1.0.0
+paths:
+  /movies/search:
+    get:
+      summary: Search for movies
+      description: Returns a list of movies, listed in order of their imdbID.
+      parameters:
+        - name: title
+          in: query
+          description: Movie title to search
+          required: false
+          schema:
+            type: string
+        - name: year
+          in: query
+          description: Year of release
+          required: false
+          schema:
+            type: string
+            pattern: '^\d{4}$'
+            example: '2001'
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: string
+            pattern: '^\d+$'
+            example: '2'
+      responses:
+        '200':
+          description: A list of movies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Movie'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+              examples:
+                Example 1:
+                  value:
+                    data:
+                      - title: "Kate & Leopold"
+                        year: 2001
+                        imdbID: "tt0035423"
+                        imdbRating: "6.4"
+                        rottenTomatoesRating: "52"
+                        metacriticRating: "44"
+                        classification: "PG-13"
+                    pagination:
+                      total: 12184
+                      lastPage: 122
+                      prevPage: null
+                      nextPage: 2
+                      perPage: 100
+                      currentPage: 1
+                      from: 0
+                      to: 100
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+              examples:
+                InvalidYearFormat:
+                  value:
+                    error: true
+                    message: 'Invalid year format. Format must be yyyy.'
+                InvalidPageFormat:
+                  value:
+                    error: true
+                    message: 'Invalid page format. page must be a number.'
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: 'Internal Server Error'
+  /movies/data/{imdbID}:
+    get:
+      summary: Get a movie by IMDb ID
+      parameters:
+        - name: imdbID
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The IMDb ID of the movie
+      responses:
+        '200':
+          description: A movie object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieData'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Query parameters are not permitted."
+        '404':
+          description: Movie not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "No record exists of a movie with this ID"
+        '500':
+          description: Server error
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Internal server error message"
+
+
+  /people/{id}:
+    get:
+      security:
+        - BearerAuth: [ ]
+      summary: Get person by ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The person's ID
+      responses:
+        '200':
+          description: Successfully retrieved person
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+              examples:
+                example1:
+                  value:
+                    name: "Patrick Stewart"
+                    birthYear: 1940
+                    deathYear: null
+                    roles:
+                      - movieName: "Star Trek: Generations"
+                        movieId: "tt0111280"
+                        category: "actor"
+                        characters:
+                          - "Picard"
+                        imdbRating: 6.6
+        '400':
+          description: Query parameters are not permitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                example1:
+                  value:
+                    error: true
+                    message: "Query parameters are not permitted."
+        '401':
+          description: Authorization header ('Bearer token') not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                example1:
+                  value:
+                    error: true
+                    message: "Authorization header ('Bearer token') not found"
+        '404':
+          description: No record exists of a person with this ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                example1:
+                  value:
+                    error: true
+                    message: "No record exists of a person with this ID"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                example1:
+                  value:
+                    error: true
+                    message: "Internal server error"
+
+  /user/register:
+    post:
+      summary: User registration
+      description: Register a new user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+            examples:
+              missingParams:
+                summary: Missing parameters
+                value:
+                  "error": true
+                  "message": "Request body incomplete, both email and password are required"
+      responses:
+        '201':
+          description: Successful registration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                userCreated:
+                  value:
+                    "message": "User created"
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+              examples:
+                missingParams:
+                  value:
+                    "error": true
+                    "message": "Request body incomplete, both email and password are required"
+        '409':
+          description: Conflict - user already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+              examples:
+                userExists:
+                  value:
+                    "error": true
+                    "message": "User already exists"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                serverError:
+                  value:
+                    "message": "An error message"
+
+
+  /user/login:
+    post:
+      summary: User Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+                - email
+                - password
+            examples:
+              example-1:
+                value:
+                  email: "user@example.com"
+                  password: "userpass"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              examples:
+                example-1:
+                  value:
+                    bearerToken:
+                      token: "sampleToken"
+                      token_type: "Bearer"
+                      expires_in: 600
+                    refreshToken:
+                      token: "sampleRefreshToken"
+                      token_type: "Refresh"
+                      expires_in: 86400
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                example-1:
+                  value:
+                    error: true
+                    message: "Request body incomplete, both email and password are required"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                example-1:
+                  value:
+                    error: true
+                    message: "Incorrect email or password"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              examples:
+                example-1:
+                  value:
+                    error: true
+                    message: "Internal server error"
+
+  /user/logout:
+    post:
+      summary: Logout a user
+      operationId: logoutUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  description: The refresh token of the user
+                  example: '<<some refresh token here>>'
+      responses:
+        '200':
+          description: Successful logout
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+              example:
+                error: false
+                message: 'Token successfully invalidated'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+              example:
+                error: true
+                message: 'Request body incomplete, refresh token required'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+              example:
+                error: true
+                message: 'JWT token has expired'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: 'Internal server error message'
+  /user/{email}/profile:
+    get:
+      summary: Retrieves the profile of a user
+      parameters:
+        - in: path
+          name: email
+          required: true
+          schema:
+            type: string
+            format: email
+          description: The email of the user to retrieve
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    format: email
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+                  dob:
+                    type: string
+                    format: date
+                  address:
+                    type: string
+              examples:
+                Public:
+                  value:
+                    email: "mike@gmail.com"
+                    firstName: "Michael"
+                    lastName: "Jordan"
+                Private:
+                  value:
+                    email: "mike@gmail.com"
+                    firstName: "Michael"
+                    lastName: "Jordan"
+                    dob: "1963-02-17"
+                    address: "123 Fake Street, Springfield"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+              examples:
+                ExpiredToken:
+                  value:
+                    error: true
+                    message: "JWT token has expired"
+                InvalidToken:
+                  value:
+                    error: true
+                    message: "Invalid JWT token"
+                MalformedHeader:
+                  value:
+                    error: true
+                    message: "Authorization header is malformed"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+              examples:
+                UserNotFound:
+                  value:
+                    error: true
+                    message: "User not found"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+              examples:
+                GenericError:
+                  value:
+                    error: true
+                    message: "Internal Server Error"
+    put:
+      summary: Update User Profile
+      description: Provide profile information
+      operationId: updateUserProfile
+      parameters:
+        - in: path
+          name: email
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+            example:
+              firstName: "Michael"
+              lastName: "Jordan"
+              dob: "1963-02-17"
+              address: "123 Fake Street, Springfield"
+      responses:
+        '200':
+          description: Successful update of user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+              example:
+                email: "mike@gmail.com"
+                firstName: "Michael"
+                lastName: "Jordan"
+                dob: "1963-02-17"
+                address: "123 Fake Street, Springfield"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  schemas:
+    Movie:
+      type: object
+      properties:
+        title:
+          type: string
+        year:
+          type: integer
+        imdbID:
+          type: string
+        imdbRating:
+          type: string
+        rottenTomatoesRating:
+          type: string
+        metacriticRating:
+          type: string
+        classification:
+          type: string
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        lastPage:
+          type: integer
+        prevPage:
+          type: integer
+        nextPage:
+          type: integer
+        perPage:
+          type: integer
+        currentPage:
+          type: integer
+        from:
+          type: integer
+        to:
+          type: integer
+    MovieData:
+      type: object
+      properties:
+        year:
+          type: integer
+          example: 1998
+        runtime:
+          type: integer
+          example: 83
+        genres:
+          type: array
+          items:
+            type: string
+        country:
+          type: string
+          example: "United States"
+        principals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Principal'
+        ratings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rating'
+        boxoffice:
+          type: integer
+          example: 90757863
+        poster:
+          type: string
+        plot:
+          type: string
+          example: "A rather neurotic ant tries to break from his totalitarian society  while trying to win the affection of the princess he loves."
+
+    Principal:
+      type: object
+      properties:
+        id:
+          type: string
+        category:
+          type: string
+        name:
+          type: string
+        characters:
+          type: array
+          items:
+            type: string
+
+    Rating:
+      type: object
+      properties:
+        source:
+          type: string
+        value:
+          type: number
+    Person:
+      type: object
+      properties:
+        name:
+          type: string
+        birthYear:
+          type: integer
+        deathYear:
+          type: integer
+          nullable: true
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              movieName:
+                type: string
+              movieId:
+                type: string
+              category:
+                type: string
+              characters:
+                type: array
+                items:
+                  type: string
+              imdbRating:
+                type: float
+
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: boolean
+        message:
+          type: string
+    LoginResponse:
+      type: object
+      properties:
+        bearerToken:
+          type: object
+          properties:
+            token:
+              type: string
+            token_type:
+              type: string
+            expires_in:
+              type: integer
+        refreshToken:
+          type: object
+          properties:
+            token:
+              type: string
+            token_type:
+              type: string
+            expires_in:
+              type: integer
+    BadRequestResponse:
+      type: object
+      properties:
+        error:
+          type: boolean
+        message:
+          type: string
+    UnauthorizedResponse:
+      type: object
+      properties:
+        error:
+          type: boolean
+        message:
+          type: string
+
+    User:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        dob:
+          type: string
+          format: date
+        address:
+          type: string
+    Profile:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        dob:
+          type: string
+        address:
+          type: string
+    ProfileResponse:
+      type: object
+      properties:
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        dob:
+          type: string
+        address:
+          type: string
+      ErrorResponse:
+        type: object
+        properties:
+          error:
+            type: boolean
+          message:
+            type: string
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            IncompleteRequest:
+              value:
+                error: true
+                message: "Request body incomplete: firstName, lastName, dob and address are required"
+            InvalidRequest:
+              value:
+                error: true
+                message: "Request body invalid: firstName, lastName, dob and address must be strings only"
+            InvalidDOB:
+              value:
+                error: true
+                message: "Invalid input: dob must be a real date in format YYYY-MM-DD"
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            NoAuthHeader:
+              value:
+                error: true
+                message: "Authorization header ('Bearer token') not found"
+            MalformedHeader:
+              value:
+                error: true
+                message: "Authorization header is malformed"
+            InvalidJWT:
+              value:
+                error: true
+                message: "Invalid JWT token"
+            ExpiredJWT:
+              value:
+                error: true
+                message: "JWT token has expired"
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            Default:
+              value:
+                error: true
+                message: "Forbidden"
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            Default:
+              value:
+                error: true
+                message: "User not found"
+    ServerError:
+      description: Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            Default:
+              value:
+                error: true
+                message: "An error occurred"
+
+
+#              TODO update swagger.yaml
