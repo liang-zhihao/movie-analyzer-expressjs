@@ -1,5 +1,5 @@
 import express from 'express';
-import UsersController from '../controllers/usersController.js';
+import UsersController from '../controllers/UsersController.js';
 import {authForGetProfile, authForPeople, authForUpdateProfile} from '../middleware/auth.js';
 
 

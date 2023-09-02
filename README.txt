@@ -5,3 +5,4 @@
 4. npm run start
 5. http://localhost:3000
 
+firebase emulators:start

@@ -4,14 +4,16 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
-import knex from './src/config/db.js';
+import knex from './functions/src/config/db.js';
 import YAML from 'yamljs';
+import functions from 'firebase-functions' 
 
 // Import routes
-import userRoutes from './src/routes/users.js';
-import movieRoutes from './src/routes/movies.js';
+import userRoutes from './functions/src/routes/users.js';
+import movieRoutes from './functions/src/routes/movies.js';
 // import swaggerDocument from './src/utils/swagger.js';
-import peopleRoutes from './src/routes/people.js';
+import peopleRoutes from './functions/src/routes/people.js';
+import commentRoutes from './functions/src/routes/comments.js';
 // Load environment variables
 dotenv.config();
 
@@ -57,5 +59,6 @@ app.use((req, res, next) => {
 // });
 
 // Listen to a port
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Server running on port: ${PORT}`));
+// const PORT = process.env.PORT || 3001;
+// app.listen(PORT, () => console.log(`Server running on port: ${PORT}`));
+export const webApi = functions.https.onRequest(app);
